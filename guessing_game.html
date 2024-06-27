@@ -1,0 +1,219 @@
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Games</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="container">
+            <div class="row align-items-start">
+                <div class="col">
+                    <h1>Distance Game</h1>
+                    <p>This is a game that will calculate the distance between two points.</p>
+                    <form>
+                        <div class="mb-3">
+                            <label for="number1textbox" class="form-label">Location #1 (Latitude)</label>
+                            <input type="text" class="form-control" id="number1textbox" aria-describedby="number1help">
+                            <div id="number1help" class="form-text">Please enter in your first latitude location.</div>
+                        </div>
+                
+                        <div class="mb-3">
+                            <label for="number2textbox" class="form-label">Location #1 (Longitude)</label>
+                            <input type="text" class="form-control" id="number2textbox" aria-describedby="number2help">
+                            <div id="number2help" class="form-text">Please enter in your first longitude location.</div>
+                        </div>
+                
+                        <div class="mb-3">
+                            <label for="number3textbox" class="form-label">Location #2 (Latitude)</label>
+                            <input type="text" class="form-control" id="number3textbox" aria-describedby="number3help">
+                            <div id="number3help" class="form-text">Please enter in your second latitude location.</div>
+                        </div>
+                
+                        <div class="mb-3">
+                            <label for="number4textbox" class="form-label">Location #2 (Longitude)</label>
+                            <input type="text" class="form-control" id="number4textbox" aria-describedby="number4help">
+                            <div id="number4help" class="form-text">Please enter in your second longitude location.</div>
+                        </div>
+                
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gameradio" id="kilometersradio">
+                            <label class="form-check-label" for="kilometerscalc">Kilometers</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gameradio" id="milesradio" checked>
+                            <label class="form-check-label" for="milescalc">Miles</label>
+                        </div>
+                    </form>
+                    <button type="button" class="btn btn-primary" onclick="calculatedistance()">Calculate Distance</button>
+                    <div id="distanceResult"></div>
+                </div>
+                <div class="col">
+                    <h1>Number Guessing Game</h1>
+                    <p>For this game, you will enter in a random number ranging from 1 to 100.</p>
+                    <div class="mb-3">
+                        <label for="number5textbox" class="form-label">Please enter in a number, ranging from 1 to 100</label>
+                        <input type="text" class="form-control" id="number5textbox" aria-describedby="number5help">
+                        <div id="number5help" class="form-text">Good luck!</div>
+                    </div>
+                
+                    <button type="button" class="btn btn-primary" onclick="guessinggame()">Guess the Number</button>
+                    <div id="guessResult"></div>
+                </div>
+            </div>
+        </div>
+
+	<!-- Column 2: guessing game -->
+
+<script>  
+        
+
+// UTILITY FUNCTION:  Haversine distance calculator
+function haversine(lat1, lon1, lat2, lon2, miles) {
+    function toRad(x) {
+        return x * Math.PI / 180;
+    }
+    const R = 6371; // km
+    let x1 = lat2 - lat1;
+    let dLat = toRad(x1);
+    let x2 = lon2 - lon1;
+    let dLon = toRad(x2)
+    let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    let d = R * c;
+    if (miles == true) d = d / 1.60934;
+    return d;
+}
+
+// *****************************************************
+// WARM-UP EXERCISES:  Complete this series of five warm-up exercises to get started with JavaScript programming.  Your code for each one of the exercises should be placed after the comment introducing each exercise.  Each exercise is worth one point of your assignment score.
+
+// EXERCISE 1:  Write a loop that displays (on the console) the powers of 2 (i.e., 2 to the n-th power) for all numbers (n) ranging from 0 to 20.  Your output should be displayed in user-friendly text, i.e., "2 to the power of 8 is 256."
+
+const powernumbers = 21
+for (n = 0; n < powernumbers; n = n + 1) {
+    const result = Math.pow(2,n);
+    console.log(`2 to the power of ${n} is ${result}`)
+}
+
+// EXERCISE 2:  Write a function that implements the Pythagorean theorem and returns the length of the hypotenuse of a right triangle using the lengths of the sides, which are to be passed in to the function as arguments.
+
+function pythfunction (a,b) {
+    var side1 = (a**2)
+    var side2 = (b**2)
+    var c = Math.sqrt(side1 + side2)
+    return c;
+ } 
+
+ var side1 = 2
+ var sideb = 7
+
+ console.log(pythfunction(side1,sideb));
+
+// EXERCISE 3:  Write a function that can be used to test whether a number is even or odd, and call this function on at least one even number and one odd number to demonstrate that it works properly. The function should return a value of true if the number is even and false if the number is odd.
+
+function number_guess() {
+  let user_question = prompt('Please give me a single number, even or odd.') 
+  if (user_question % 2) {
+      console.log("This is an odd number.")
+  }
+  else {
+      console.log('This is an even number.')
+  }
+}
+
+number_guess();
+
+// EXERCISE 4:  Write a function that converts Degree-Minute-Second (DMS) coordinates to decimal degrees.  The function should accept degrees, minutes, and seconds as three separate arguments.
+
+function decimal_change(degrees, minutes, seconds) {
+    let decimal_degrees = parseInt(degrees) + (parseInt(minutes)/60) + (parseInt(seconds)/3600);
+    return decimal_degrees.toFixed(10);
+}
+
+let degrees_input = prompt("Please give me a number in degrees");
+let minute_input = prompt('Please give me a number in minutes');
+let second_input = prompt('Please give me a number in seconds');
+
+let decimal_degrees = decimal_change(degrees_input,minute_input,second_input);
+console.log('The decimal degree value is: ', decimal_degrees);
+
+// EXERCISE 5:  Write a statement that changes the HTML content of a <div> tag.
+
+<div id = 'sonyplaystation'>Sony Playstation!</div>
+document.getElementById('sonyplaystation').innerHTML = 'microsoftxbox';
+
+</script>
+<script>  
+// *****************************************************
+// PROGRAMMING CHALLENGES:  You will complete two more extensive programming exercises -- (1) developing an interactive distance calculation tool, and (2) developing an interactive guessing game.  Write the JavaScript code for each of the programming challenges below.  All supporting HTML should be written above where indicated.
+
+// PROGRAMMING CHALLENGE 1:  LOCATION CALCULATOR (eight points)
+// Place the JavaScript code for your location calculator below.
+// HINT:  Write a function that calculates distance after the user clicks on a button.
+
+        // Haversine formula for calculating distance between two points
+        function haversine(lat1, lon1, lat2, lon2, miles) {
+            function toRad(x) {
+                return x * Math.PI / 180;
+            }
+            const R = 6371; // km
+            let x1 = lat2 - lat1;
+            let dLat = toRad(x1);
+            let x2 = lon2 - lon1;
+            let dLon = toRad(x2)
+            let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            let d = R * c;
+            if (miles == true) d = d / 1.60934;
+            return d;
+        }
+
+        // PROGRAMMING CHALLENGE 1: LOCATION CALCULATOR
+        function calculatedistance() {
+            let lat1 = parseFloat(document.getElementById('number1textbox').value);
+            let lon1 = parseFloat(document.getElementById('number2textbox').value);
+            let lat2 = parseFloat(document.getElementById('number3textbox').value);
+            let lon2 = parseFloat(document.getElementById('number4textbox').value);
+            let miles = document.getElementById('milesradio').checked;
+
+            let distance = haversine(lat1, lon1, lat2, lon2, miles);
+
+            var resultElement = document.getElementById('distanceResult');
+            resultElement.textContent = `The distance is ${distance.toFixed(2)} ${miles ? 'miles' : 'kilometers'}. Please experiment, and have fun!`;
+        }
+
+// PROGRAMMING CHALLENGE 2: NUMBER GUESSING GAME (six points)
+// Place the JavaScript code for your number guessing game below.  Note that you do not need to write logic to handle restarting the game --  for the sake of simplicity, the user can reload the Web page to restart the game.
+// HINT:  Declare variables for storing (1) turns taken and (2) the correct number, and then write a function to check the guess that is triggered by clicking a button.
+
+function guessinggame() {
+            var usernumber = parseInt(document.getElementById("number5textbox").value);
+            var message;
+
+            if (isNaN(usernumber) || usernumber < 1 || usernumber > 100) {
+                message = "Please enter a valid number between 1 and 100.";
+            } else if (usernumber < randomnumber) {
+                message = "Your guess is too low!";
+            } else if (usernumber > randomnumber) {
+                message = "Your guess is too high!";
+            } else {
+                message = "Your answer was spot on! Congratulations!";
+            }
+
+            var attemptsMessage = `Number of attempts: ${++guessinggame.attempts}`;
+            document.getElementById("guessResult").textContent = `${message} ${attemptsMessage}`;
+        }
+
+        guessinggame.attempts = 0;
+
+        var minnumber = 1;
+        var maxnumber = 100;
+        var randomnumber = Math.floor(Math.random() * (maxnumber - minnumber + 1)) + minnumber;
+    </script>
+</body>
+</html>

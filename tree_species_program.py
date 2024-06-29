@@ -1,3 +1,23 @@
+# Installation of any necessary modules should be completed here
+!pip install geopandas keplergl
+!pip install geopandas mapclassify contextily
+!sudo apt install -y libspatialindex-dev
+!pip install rtree geoplot
+!pip install scikit-learn
+!pip install shapely as sh
+
+import pandas as pd
+import geopandas as gpd
+import contextily as cx
+import matplotlib.pyplot as plt
+import shapely as sh
+from sklearn.preprocessing import LabelEncoder
+import ipywidgets as widgets
+from IPython.display import display
+from IPython.display import clear_output
+from geopy.geocoders import Nominatim
+import geoplot as gplt
+
 # -*- coding: utf-8 -*-
 """tree_species_program.ipynb
 

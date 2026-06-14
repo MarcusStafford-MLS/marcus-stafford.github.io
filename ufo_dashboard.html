@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>West Coast UFO Sightings Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background: #0d1117;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ── Header ── */
+        #header {
+            background: #0d1117;
+            border-bottom: 1px solid #1e2a3a;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        #header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: 0.01em;
+        }
+        #header p {
+            font-size: 13px;
+            color: #6b7e94;
+            margin: 0;
+        }
+
+        /* ── Filter bar ── */
+        #filterbar {
+            background: #111820;
+            border-bottom: 1px solid #1e2a3a;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        #filterbar label {
+            font-size: 12px;
+            color: #6b7e94;
+            margin-right: 4px;
+        }
+        #filterbar select {
+            background: #1a2433;
+            border: 1px solid #2a3a50;
+            color: #c9d8e8;
+            font-size: 13px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        #filterbar select:focus { outline: none; border-color: #4a8fc4; }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .heat-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            font-size: 13px;
+            color: #6b7e94;
+            cursor: pointer;
+            user-select: none;
+        }
+        .heat-toggle input[type="checkbox"] {
+            accent-color: #4a8fc4;
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        /* ── Main layout ── */
+        #main {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            height: calc(100vh - 97px);
+        }
+
+        /* ── Map ── */
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ── Sidebar ── */
+        #sidebar {
+            background: #111820;
+            border-left: 1px solid #1e2a3a;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .s-card {
+            background: #1a2433;
+            border: 1px solid #2a3a50;
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+        .s-card-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #4a8fc4;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        /* stat grid */
+        .stat-big {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1;
+        }
+        .stat-sub {
+            font-size: 12px;
+            color: #6b7e94;
+            margin-top: 2px;
+        }
+        .mini-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .mini-cell {
+            background: #111820;
+            border-radius: 7px;
+            padding: 8px 10px;
+        }
+        .mini-cell .mc-label {
+            font-size: 10px;
+            color: #4a6a8a;
+            margin-bottom: 2px;
+        }
+        .mini-cell .mc-val {
+            font-size: 13px;
+            font-weight: 600;
+            color: #c9d8e8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* timeline */
+        #timeline-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 64px;
+        }
+        .tl-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .tl-bar {
+            width: 100%;
+            background: #4a8fc4;
+            border-radius: 2px 2px 0 0;
+            opacity: 0.8;
+            transition: opacity 0.15s;
+            min-height: 2px;
+        }
+        .tl-bar:hover { opacity: 1; }
+        #timeline-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 10px;
+            color: #4a6a8a;
+        }
+
+        /* shape bars */
+        .shape-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .shape-name {
+            width: 68px;
+            text-align: right;
+            font-size: 12px;
+            color: #8aa0b8;
+            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .shape-track {
+            flex: 1;
+            background: #111820;
+            border-radius: 3px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .shape-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1e5a8a, #4a8fc4);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .shape-count {
+            width: 30px;
+            text-align: right;
+            font-size: 11px;
+            color: #4a6a8a;
+            flex-shrink: 0;
+        }
+
+        /* export button */
+        #exportBtn {
+            width: 100%;
+            padding: 9px;
+            background: transparent;
+            border: 1px solid #2a3a50;
+            color: #8aa0b8;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        #exportBtn:hover {
+            background: #1e3550;
+            border-color: #4a8fc4;
+            color: #c9d8e8;
+        }
+        #exportBtn svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Leaflet popup override */
+        .leaflet-popup-content-wrapper {
+            background: #1a2433;
+            border: 1px solid #2a3a50;
+            border-radius: 8px;
+            color: #c9d8e8;
+            font-size: 13px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .leaflet-popup-tip { background: #1a2433; }
+        .leaflet-popup-content b { color: #ffffff; }
+        .popup-shape-badge {
+            display: inline-block;
+            background: #1e3550;
+            color: #4a8fc4;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        /* stats control on map */
+        .leaflet-control { }
+    </style>
+</head>
+
+<body>
+
+<!-- Header -->
+<div id="header">
+    <div>
+        <h1>West Coast UFO Sightings</h1>
+        <p>California, Oregon &amp; Washington — filter by state, year, or shape</p>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div id="filterbar">
+    <div class="filter-group">
+        <label>State</label>
+        <select id="stateFilter">
+            <option value="all">All states</option>
+            <option value="ca">California</option>
+            <option value="or">Oregon</option>
+            <option value="wa">Washington</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Year</label>
+        <select id="yearFilter">
+            <option value="all">All years</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Shape</label>
+        <select id="shapeFilter">
+            <option value="all">All shapes</option>
+        </select>
+    </div>
+    <label class="heat-toggle">
+        <input type="checkbox" id="heatmapToggle"> Heatmap
+    </label>
+</div>
+
+<!-- Main -->
+<div id="main">
+    <div id="map"></div>
+
+    <div id="sidebar">
+
+        <!-- Summary -->
+        <div class="s-card" id="card-summary">
+            <div class="s-card-label">Filtered results</div>
+            <div class="stat-big" id="stat-count">—</div>
+            <div class="stat-sub">sightings</div>
+            <div class="mini-grid">
+                <div class="mini-cell">
+                    <div class="mc-label">Top city</div>
+                    <div class="mc-val" id="stat-city">—</div>
+                </div>
+                <div class="mini-cell">
+                    <div class="mc-label">Peak year</div>
+                    <div class="mc-val" id="stat-year">—</div>
+                </div>
+                <div class="mini-cell">
+                    <div class="mc-label">Top shape</div>
+                    <div class="mc-val" id="stat-shape">—</div>
+                </div>
+                <div class="mini-cell">
+                    <div class="mc-label">States</div>
+                    <div class="mc-val" id="stat-states">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="s-card">
+            <div class="s-card-label">Sightings by year</div>
+            <div id="timeline-bars"></div>
+            <div id="timeline-labels"></div>
+        </div>
+
+        <!-- Shape breakdown -->
+        <div class="s-card">
+            <div class="s-card-label">Top shapes</div>
+            <div id="shape-bars"></div>
+        </div>
+
+        <!-- Export -->
+        <div class="s-card" style="padding: 12px 14px;">
+            <button id="exportBtn">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export filtered data as CSV
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="ufo_west.js"></script>
+
+<script>
+// ── Map init ──
+var map = L.map('map', { zoomControl: true }).setView([43, -120], 5);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19
+}).addTo(map);
+
+var markers = L.markerClusterGroup({
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    disableClusteringAtZoom: 12
+});
+
+var heatLayer = null;
+
+// ── Populate dropdowns ──
+var years = new Set();
+var shapes = new Set();
+ufoData.features.forEach(function(f) {
+    if (f.properties.datetime) years.add(f.properties.datetime.split('-')[0]);
+    if (f.properties.shape) shapes.add(f.properties.shape.toLowerCase());
+});
+
+var yearSelect = document.getElementById('yearFilter');
+[...years].sort().forEach(function(y) {
+    var o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    yearSelect.appendChild(o);
+});
+
+var shapeSelect = document.getElementById('shapeFilter');
+[...shapes].sort().forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s;
+    o.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+    shapeSelect.appendChild(o);
+});
+
+// ── Helpers ──
+function topKey(obj) {
+    var keys = Object.keys(obj);
+    if (!keys.length) return null;
+    return keys.reduce(function(a, b) { return obj[a] > obj[b] ? a : b; });
+}
+
+function capitalize(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+
+// ── Render ──
+function renderData() {
+    markers.clearLayers();
+    if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+
+    var stateVal = document.getElementById('stateFilter').value;
+    var yearVal  = document.getElementById('yearFilter').value;
+    var shapeVal = document.getElementById('shapeFilter').value;
+    var doHeat   = document.getElementById('heatmapToggle').checked;
+
+    var filtered = [];
+    ufoData.features.forEach(function(f) {
+        var stateMatch = stateVal === 'all' || f.properties.state === stateVal;
+        var yearMatch  = yearVal === 'all'  || (f.properties.datetime && f.properties.datetime.split('-')[0] === yearVal);
+        var shapeMatch = shapeVal === 'all' || (f.properties.shape && f.properties.shape.toLowerCase() === shapeVal);
+        if (stateMatch && yearMatch && shapeMatch) filtered.push(f);
+    });
+
+    // ── Compute stats ──
+    var cityCount  = {};
+    var yearCount  = {};
+    var shapeCount = {};
+    var stateSet   = new Set();
+
+    filtered.forEach(function(f) {
+        var p = f.properties;
+        if (p.city)     cityCount[p.city]  = (cityCount[p.city]  || 0) + 1;
+        if (p.datetime) { var yr = p.datetime.split('-')[0]; yearCount[yr] = (yearCount[yr] || 0) + 1; }
+        if (p.shape)    { var sh = p.shape.toLowerCase(); shapeCount[sh] = (shapeCount[sh] || 0) + 1; }
+        if (p.state)    stateSet.add(p.state.toUpperCase());
+    });
+
+    var topCity  = topKey(cityCount);
+    var peakYear = topKey(yearCount);
+    var topShape = topKey(shapeCount);
+    var stateStr = stateSet.size ? [...stateSet].sort().join(', ') : '—';
+
+    // ── Update summary cards ──
+    document.getElementById('stat-count').textContent = filtered.length.toLocaleString();
+    document.getElementById('stat-city').textContent  = topCity  ? capitalize(topCity)  : '—';
+    document.getElementById('stat-year').textContent  = peakYear || '—';
+    document.getElementById('stat-shape').textContent = topShape ? capitalize(topShape) : '—';
+    document.getElementById('stat-states').textContent = stateStr;
+
+    // ── Timeline ──
+    var tlContainer = document.getElementById('timeline-bars');
+    var tlLabels    = document.getElementById('timeline-labels');
+    tlContainer.innerHTML = '';
+    tlLabels.innerHTML = '';
+
+    var allYears = Object.keys(yearCount).sort();
+    if (allYears.length) {
+        var maxCount = Math.max.apply(null, allYears.map(function(y) { return yearCount[y]; }));
+        allYears.forEach(function(y) {
+            var pct = maxCount > 0 ? (yearCount[y] / maxCount * 100) : 0;
+            var col = document.createElement('div');
+            col.className = 'tl-col';
+            col.title = y + ': ' + yearCount[y] + ' sightings';
+            var bar = document.createElement('div');
+            bar.className = 'tl-bar';
+            bar.style.height = Math.max(pct, 2) + '%';
+            col.appendChild(bar);
+            tlContainer.appendChild(col);
+        });
+        // labels: first, middle, last
+        var indices = [0, Math.floor(allYears.length / 2), allYears.length - 1];
+        var labelYears = [...new Set(indices.map(function(i) { return allYears[i]; }))];
+        var first = document.createElement('span'); first.textContent = labelYears[0];
+        tlLabels.appendChild(first);
+        if (labelYears[1] && labelYears[1] !== labelYears[0] && labelYears[1] !== labelYears[labelYears.length-1]) {
+            var mid = document.createElement('span'); mid.textContent = labelYears[1];
+            tlLabels.appendChild(mid);
+        }
+        if (labelYears.length > 1) {
+            var last = document.createElement('span'); last.textContent = labelYears[labelYears.length-1];
+            tlLabels.appendChild(last);
+        }
+    } else {
+        tlContainer.innerHTML = '<span style="font-size:12px;color:#4a6a8a;">No data</span>';
+    }
+
+    // ── Shape bars ──
+    var shapeBarsEl = document.getElementById('shape-bars');
+    shapeBarsEl.innerHTML = '';
+    var sortedShapes = Object.entries(shapeCount)
+        .sort(function(a, b) { return b[1] - a[1]; })
+        .slice(0, 7);
+
+    if (sortedShapes.length) {
+        var maxS = sortedShapes[0][1];
+        sortedShapes.forEach(function(entry) {
+            var name = entry[0], cnt = entry[1];
+            var pct = maxS > 0 ? (cnt / maxS * 100) : 0;
+            var row = document.createElement('div');
+            row.className = 'shape-row';
+            row.innerHTML =
+                '<span class="shape-name">' + capitalize(name) + '</span>' +
+                '<div class="shape-track"><div class="shape-fill" style="width:' + pct + '%"></div></div>' +
+                '<span class="shape-count">' + cnt + '</span>';
+            shapeBarsEl.appendChild(row);
+        });
+    } else {
+        shapeBarsEl.innerHTML = '<span style="font-size:12px;color:#4a6a8a;">No data</span>';
+    }
+
+    // ── Map layer ──
+    if (doHeat) {
+        var pts = filtered.map(function(f) {
+            return [f.geometry.coordinates[1], f.geometry.coordinates[0], 1];
+        });
+        heatLayer = L.heatLayer(pts, { radius: 25, blur: 15, maxZoom: 12, gradient: { 0.4: '#1e5a8a', 0.65: '#4a8fc4', 1: '#a8d4f5' } });
+        heatLayer.addTo(map);
+    } else {
+        L.geoJSON(filtered, {
+            pointToLayer: function(f, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 5,
+                    fillColor: '#4a8fc4',
+                    color: '#1a2433',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.85
+                });
+            },
+            onEachFeature: function(f, layer) {
+                var p = f.properties;
+                var popup =
+                    '<b>' + (p.city ? capitalize(p.city) : '') + (p.state ? ', ' + p.state.toUpperCase() : '') + '</b><br>' +
+                    '<span style="color:#6b7e94;font-size:12px;">' + (p.datetime || '') + '</span><br>' +
+                    (p.shape ? '<span class="popup-shape-badge">' + p.shape + '</span><br>' : '') +
+                    (p.comments ? '<span style="color:#8aa0b8;font-size:12px;display:block;margin-top:6px;">' + p.comments.slice(0, 200) + (p.comments.length > 200 ? '…' : '') + '</span>' : '');
+                layer.bindPopup(popup, { maxWidth: 260 });
+                markers.addLayer(layer);
+            }
+        });
+        map.addLayer(markers);
+    }
+
+    // Zoom to state
+    if (stateVal !== 'all') {
+        var bounds = markers.getBounds();
+        if (bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30] });
+    }
+}
+
+// ── CSV export ──
+document.getElementById('exportBtn').addEventListener('click', function() {
+    var stateVal = document.getElementById('stateFilter').value;
+    var yearVal  = document.getElementById('yearFilter').value;
+    var shapeVal = document.getElementById('shapeFilter').value;
+
+    var rows = [['city', 'state', 'datetime', 'shape', 'latitude', 'longitude', 'comments']];
+    ufoData.features.forEach(function(f) {
+        var p = f.properties;
+        var stateMatch = stateVal === 'all' || p.state === stateVal;
+        var yearMatch  = yearVal === 'all'  || (p.datetime && p.datetime.split('-')[0] === yearVal);
+        var shapeMatch = shapeVal === 'all' || (p.shape && p.shape.toLowerCase() === shapeVal);
+        if (stateMatch && yearMatch && shapeMatch) {
+            var lat = f.geometry.coordinates[1];
+            var lon = f.geometry.coordinates[0];
+            var comment = (p.comments || '').replace(/"/g, '""');
+            rows.push([
+                '"' + (p.city || '') + '"',
+                '"' + (p.state || '') + '"',
+                '"' + (p.datetime || '') + '"',
+                '"' + (p.shape || '') + '"',
+                lat, lon,
+                '"' + comment + '"'
+            ]);
+        }
+    });
+
+    var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url;
+    a.download = 'ufo_sightings_filtered.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+// ── Event listeners ──
+document.getElementById('stateFilter').addEventListener('change', renderData);
+document.getElementById('yearFilter').addEventListener('change', renderData);
+document.getElementById('shapeFilter').addEventListener('change', renderData);
+document.getElementById('heatmapToggle').addEventListener('change', renderData);
+
+// ── Initial render ──
+renderData();
+</script>
+</body>
+</html>
